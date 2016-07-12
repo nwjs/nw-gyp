@@ -84,10 +84,11 @@ class VisualStudioVersion(object):
       # vcvars32, which it can only find if VS??COMNTOOLS is set, which it
       # isn't always.
       if target_arch == 'x86':
-        if self.short_name == '2013' and (
+        if self.short_name >= '2013' and self.short_name[-1] != 'e' and (
             os.environ.get('PROCESSOR_ARCHITECTURE') == 'AMD64' or
             os.environ.get('PROCESSOR_ARCHITEW6432') == 'AMD64'):
-          # VS2013 non-Express has a x64-x86 cross that we want to prefer.
+          # VS2013 and later, non-Express have a x64-x86 cross that we want
+          # to prefer.
           return [os.path.normpath(
              os.path.join(self.path, 'VC/vcvarsall.bat')), 'amd64_x86']
         # Otherwise, the standard x86 compiler.
@@ -96,9 +97,11 @@ class VisualStudioVersion(object):
       else:
         assert target_arch == 'x64'
         arg = 'x86_amd64'
-        if (os.environ.get('PROCESSOR_ARCHITECTURE') == 'AMD64' or
+        # Use the 64-on-64 compiler if we're not using an express
+        # edition and we're running on a 64bit OS.
+        if self.short_name[-1] != 'e' and (
+            os.environ.get('PROCESSOR_ARCHITECTURE') == 'AMD64' or
             os.environ.get('PROCESSOR_ARCHITEW6432') == 'AMD64'):
-          # Use the 64-on-64 compiler if we can.
           arg = 'amd64'
         return [os.path.normpath(
             os.path.join(self.path, 'VC/vcvarsall.bat')), arg]
@@ -136,7 +139,7 @@ def _RegistryQueryBase(sysdir, key, value):
 
 
 def _RegistryQuery(key, value=None):
-  """Use reg.exe to read a particular key through _RegistryQueryBase.
+  r"""Use reg.exe to read a particular key through _RegistryQueryBase.
 
   First tries to launch from %WinDir%\Sysnative to avoid WoW64 redirection. If
   that fails, it falls back to System32.  Sysnative is available on Vista and
@@ -163,8 +166,33 @@ def _RegistryQuery(key, value=None):
   return text
 
 
+def _RegistryGetValueUsingWinReg(key, value):
+  """Use the _winreg module to obtain the value of a registry key.
+
+  Args:
+    key: The registry key.
+    value: The particular registry value to read.
+  Return:
+    contents of the registry key's value, or None on failure.  Throws
+    ImportError if _winreg is unavailable.
+  """
+  import _winreg
+  try:
+    root, subkey = key.split('\\', 1)
+    assert root == 'HKLM'  # Only need HKLM for now.
+    with _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, subkey) as hkey:
+      return _winreg.QueryValueEx(hkey, value)[0]
+  except WindowsError:
+    return None
+
+
 def _RegistryGetValue(key, value):
-  """Use reg.exe to obtain the value of a registry key.
+  """Use _winreg or reg.exe to obtain the value of a registry key.
+
+  Using _winreg is preferable because it solves an issue on some corporate
+  environments where access to reg.exe is locked down. However, we still need
+  to fallback to reg.exe for the case where the _winreg module is not available
+  (for example in cygwin python).
 
   Args:
     key: The registry key.
@@ -172,6 +200,12 @@ def _RegistryGetValue(key, value):
   Return:
     contents of the registry key's value, or None on failure.
   """
+  try:
+    return _RegistryGetValueUsingWinReg(key, value)
+  except ImportError:
+    pass
+
+  # Fallback to reg.exe if we fail to import _winreg.
   text = _RegistryQuery(key, value)
   if not text:
     return None
@@ -180,19 +214,6 @@ def _RegistryGetValue(key, value):
   if not match:
     return None
   return match.group(1)
-
-
-def _RegistryKeyExists(key):
-  """Use reg.exe to see if a key exists.
-
-  Args:
-    key: The registry key to check.
-  Return:
-    True if the key exists
-  """
-  if not _RegistryQuery(key):
-    return False
-  return True
 
 
 def _CreateVersion(name, path, sdk_based=False):
@@ -205,7 +226,7 @@ def _CreateVersion(name, path, sdk_based=False):
   if path:
     path = os.path.normpath(path)
   versions = {
-	  '2015e': VisualStudioVersion('2015',
+      '2015e': VisualStudioVersion('2015',
                                   'Visual Studio 2015',
                                   solution_version='12.00',
                                   project_version='14.0',
@@ -379,13 +400,14 @@ def _DetectVisualStudioVersions(versions_to_check, force_express):
       if not path:
         continue
       path = _ConvertToCygpath(path)
-      versions.append(_CreateVersion(version_to_year[version] + 'e',
-          os.path.join(path, '..'), sdk_based=True))
+      if version != '14.0':  # There is no Express edition for 2015.
+        versions.append(_CreateVersion(version_to_year[version] + 'e',
+            os.path.join(path, '..'), sdk_based=True))
 
   return versions
 
 
-def SelectVisualStudioVersion(version='auto'):
+def SelectVisualStudioVersion(version='auto', allow_fallback=True):
   """Select which version of Visual Studio projects to generate.
 
   Arguments:
@@ -409,7 +431,7 @@ def SelectVisualStudioVersion(version='auto'):
     '2013': ('12.0',),
     '2013e': ('12.0',),
     '2015': ('14.0',),
-	'2015e': ('14.0',),
+    '2015e': ('14.0',),
   }
   override_path = os.environ.get('GYP_MSVS_OVERRIDE_PATH')
   if override_path:
@@ -421,6 +443,8 @@ def SelectVisualStudioVersion(version='auto'):
   version = str(version)
   versions = _DetectVisualStudioVersions(version_map[version], 'e' in version)
   if not versions:
+    if not allow_fallback:
+      raise ValueError('Could not locate Visual Studio installation.')
     if version == 'auto':
       # Default to 2005 if we couldn't find anything
       return _CreateVersion('2005', None)

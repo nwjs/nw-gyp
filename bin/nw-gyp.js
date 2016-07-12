@@ -124,8 +124,8 @@ function errorMessage () {
 function issueMessage () {
   errorMessage()
   log.error('', [ 'This is a bug in `nw-gyp`.'
-                , 'Please file an Issue:'
-                , '    <https://github.com/rogerwang/nw-gyp/issues>'
+                , 'Try to update node-gyp and file an Issue if it does not help:'
+                , '    <https://github.com/nwjs/nw-gyp/issues>'
                 ].join('\n'))
 }
 

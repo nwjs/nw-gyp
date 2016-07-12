@@ -1,13 +1,14 @@
 nw-gyp
 =========
-### Native addon build tool for node-webkit
+### Native addon build tool for NW.js (node-webkit)
 
-`nw-gyp` is a hack on `node-gyp` to build native modules for node-webkit. We are
+`nw-gyp` is a hack on `node-gyp` to build native modules for NW.js (node-webkit). We are
 trying to provide a smooth way for developers rather than specifying a lot of 
 command line arguments.
 
-It supports node-webkit starts from v0.3.2 and **users need to manually specify the
-version of node-webkit currently**.
+It supports NW.js starts from v0.3.2 and **users need to manually specify the
+version of NW.js currently**.
+
 
 #### Features:
 
@@ -30,16 +31,39 @@ You will also need to install:
   * On Unix:
     * `python` (`v2.7` recommended, `v3.x.x` is __*not*__ supported)
     * `make`
-    * A proper C/C++ compiler toolchain, like GCC
+    * A proper C/C++ compiler toolchain, like [GCC](https://gcc.gnu.org)
+  * On Mac OS X:
+    * `python` (`v2.7` recommended, `v3.x.x` is __*not*__ supported) (already installed on Mac OS X)
+    * [Xcode](https://developer.apple.com/xcode/download/)
+      * You also need to install the `Command Line Tools` via Xcode. You can find this under the menu `Xcode -> Preferences -> Downloads`
+      * This step will install `gcc` and the related toolchain containing `make`
   * On Windows:
-    * [Python][windows-python] ([`v2.7.3`][windows-python-v2.7.3] recommended, `v3.x.x` is __*not*__ supported)
-    * Windows XP/Vista/7:
-      * Microsoft Visual Studio C++ 2010 ([Express][msvc2010] version works well)
-      * For 64-bit builds of node and native modules you will _**also**_ need the [Windows 7 64-bit SDK][win7sdk]
-        * If the install fails, try uninstalling any C++ 2010 x64&x86 Redistributable that you have installed first.
-      * If you get errors that the 64-bit compilers are not installed you may also need the [compiler update for the Windows SDK 7.1]
-    * Windows 7/8:
-      * Microsoft Visual Studio C++ 2012 for Windows Desktop ([Express][msvc2012] version works well)
+    * Visual C++ Build Environment:
+      * Option 1: Install [Visual C++ Build Tools](http://landinghub.visualstudio.com/visual-cpp-build-tools) using the **Default Install** option.
+
+      * Option 2: Install [Visual Studio 2015](https://www.visualstudio.com/products/visual-studio-community-vs) (or modify an existing installation) and select *Common Tools for Visual C++* during setup. This also works with the free Community and Express for Desktop editions.
+
+      > :bulb: [Windows Vista / 7 only] requires [.NET Framework 4.5.1](http://www.microsoft.com/en-us/download/details.aspx?id=40773)
+
+    * Install [Python 2.7](https://www.python.org/downloads/) (`v3.x.x` is not supported), and run `npm config set python python2.7` (or see below for further instructions on specifying the proper Python version and path.)
+    * Launch cmd, `npm config set msvs_version 2015`
+
+    If the above steps didn't work for you, please visit [Microsoft's Node.js Guidelines for Windows](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules) for additional tips.
+
+If you have multiple Python versions installed, you can identify which Python
+version `nw-gyp` uses by setting the '--python' variable:
+
+``` bash
+$ nw-gyp --python /path/to/python2.7
+```
+
+If `nw-gyp` is called by way of `npm` *and* you have multiple versions of
+Python installed, then you can set `npm`'s 'python' config key to the appropriate
+value:
+
+``` bash
+$ npm config set python /path/to/executable/python2.7
+```
 
 Note that OS X is just a flavour of Unix and so needs `python`, `make`, and C/C++.
 An easy way to obtain these is to install XCode from Apple,
@@ -62,7 +86,7 @@ $ nw-gyp configure --target=<0.3.2 or other nw version>
 ```
 
 __Note__: The `configure` step looks for the `binding.gyp` file in the current
-directory to processs. See below for instructions on creating the `binding.gyp` file.
+directory to process. See below for instructions on creating the `binding.gyp` file.
 
 Now you will have either a `Makefile` (on Unix platforms) or a `vcxproj` file
 (on Windows) in the `build/` directory. Next invoke the `build` command:
@@ -76,7 +100,7 @@ in `build/Debug/` or `build/Release/`, depending on the build mode. At this poin
 you can require the `.node` file with Node and run your tests!
 
 __Note:__ To create a _Debug_ build of the bindings file, pass the `--debug` (or
-`-d`) switch when running the either `configure` or `build` command.
+`-d`) switch when running either the `configure`, `build` or `rebuild` command.
 
 __Note:__ nw.js is packed with Node.js version 0.11.13 and a different version of V8 (3.28.71.2) than the one Node.js 0.11.13 has (3.24.35.22), it might lead to some inconsistent behaviour when building your native modules (see [rvagg/nan#285][nanrepo]).
 
@@ -102,12 +126,13 @@ A barebones `gyp` file appropriate for building a node addon looks like:
 }
 ```
 
-Some additional resources for writing `gyp` files:
+Some additional resources for addons and writing `gyp` files:
 
- * ["Hello World" node addon example](https://github.com/joyent/node/tree/master/test/addons/hello-world)
- * [gyp user documentation](http://code.google.com/p/gyp/wiki/GypUserDocumentation)
- * [gyp input format reference](http://code.google.com/p/gyp/wiki/InputFormatReference)
- * [*"binding.gyp" files out in the wild* wiki page](https://github.com/TooTallNate/node-gyp/wiki/%22binding.gyp%22-files-out-in-the-wild)
+ * ["Going Native" a nodeschool.io tutorial](http://nodeschool.io/#goingnative)
+ * ["Hello World" node addon example](https://github.com/nodejs/node/tree/master/test/addons/hello-world)
+ * [gyp user documentation](https://gyp.gsrc.io/docs/UserDocumentation.md)
+ * [gyp input format reference](https://gyp.gsrc.io/docs/InputFormatReference.md)
+ * [*"binding.gyp" files out in the wild* wiki page](https://github.com/nodejs/node-gyp/wiki/%22binding.gyp%22-files-out-in-the-wild)
 
 
 Commands
@@ -117,13 +142,43 @@ Commands
 
 | **Command**   | **Description**
 |:--------------|:---------------------------------------------------------------
+| `help`        | Shows the help dialog
 | `build`       | Invokes `make`/`msbuild.exe` and builds the native addon
-| `clean`       | Removes any the `build` dir if it exists
+| `clean`       | Removes the `build` directory if it exists
 | `configure`   | Generates project build files for the current platform
-| `rebuild`     | Runs "clean", "configure" and "build" all in a row
-| `install`     | Installs node development header files for the given version
-| `list`        | Lists the currently installed node development file versions
-| `remove`      | Removes the node development header files for the given version
+| `rebuild`     | Runs `clean`, `configure` and `build` all in a row
+| `install`     | Installs node header files for the given version
+| `list`        | Lists the currently installed node header versions
+| `remove`      | Removes the node header files for the given version
+
+
+Command Options
+--------
+
+`nw-gyp` accepts the following command options:
+
+| **Command**                       | **Description**
+|:----------------------------------|:------------------------------------------
+| `-j n`, `--jobs n`                | Run make in parallel
+| `--target=v6.2.1`                 | Node version to build for (default=process.version)
+| `--silly`, `--loglevel=silly`     | Log all progress to console
+| `--verbose`, `--loglevel=verbose` | Log most progress to console
+| `--silent`, `--loglevel=silent`   | Don't log anything to console
+| `debug`, `--debug`                | Make Debug build (default=Release)
+| `--release`, `--no-debug`         | Make Release build
+| `-C $dir`, `--directory=$dir`     | Run command in different directory
+| `--make=$make`                    | Override make command (e.g. gmake)
+| `--thin=yes`                      | Enable thin static libraries
+| `--arch=$arch`                    | Set target architecture (e.g. ia32)
+| `--tarball=$path`                 | Get headers from a local tarball
+| `--ensure`                        | Don't reinstall headers if already present
+| `--dist-url=$url`                 | Download header tarball from custom URL
+| `--proxy=$url`                    | Set HTTP proxy for downloading header tarball
+| `--cafile=$cafile`                | Override default CA chain (to download tarball)
+| `--nodedir=$path`                 | Set the path to the node binary
+| `--python=$path`                  | Set path to the python (2) binary
+| `--msvs_version=$version`         | Set Visual Studio version (win)
+| `--solution=$solution`            | Set Visual Studio Solution version (win)
 
 
 License
@@ -159,4 +214,3 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 [msvc2012]: http://go.microsoft.com/?linkid=9816758
 [win7sdk]: http://www.microsoft.com/en-us/download/details.aspx?id=8279
 [compiler update for the Windows SDK 7.1]: http://www.microsoft.com/en-us/download/details.aspx?id=4422
-[nanrepo]: https://github.com/rvagg/nan/pull/285
