@@ -12,6 +12,8 @@ process.title = 'nw-gyp'
 
 var gyp = require('../')
 var log = require('npmlog')
+var osenv = require('osenv')
+var path = require('path')
 
 /**
  * Process and execute the selected commands.
@@ -20,6 +22,19 @@ var log = require('npmlog')
 var prog = gyp()
 var completed = false
 prog.parseArgv(process.argv)
+prog.devDir = prog.opts.devdir
+
+var homeDir = osenv.home()
+if (prog.devDir) {
+  prog.devDir = prog.devDir.replace(/^~/, homeDir)
+} else if (homeDir) {
+  prog.devDir = path.resolve(homeDir, '.nw-gyp')
+} else {
+  throw new Error(
+    "nw-gyp requires that the user's home directory is specified " +
+    "in either of the environmental variables HOME or USERPROFILE. " +
+    "Overide with: --devdir /path/to/.nw-gyp")
+}
 
 if (prog.todo.length === 0) {
   if (~process.argv.indexOf('-v') || ~process.argv.indexOf('--version')) {
@@ -124,7 +139,7 @@ function errorMessage () {
 function issueMessage () {
   errorMessage()
   log.error('', [ 'This is a bug in `nw-gyp`.'
-                , 'Try to update node-gyp and file an Issue if it does not help:'
+                , 'Try to update nw-gyp and file an Issue if it does not help:'
                 , '    <https://github.com/nwjs/nw-gyp/issues>'
                 ].join('\n'))
 }

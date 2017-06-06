@@ -38,15 +38,17 @@ You will also need to install:
       * You also need to install the `Command Line Tools` via Xcode. You can find this under the menu `Xcode -> Preferences -> Downloads`
       * This step will install `gcc` and the related toolchain containing `make`
   * On Windows:
-    * Visual C++ Build Environment:
-      * Option 1: Install [Visual C++ Build Tools](http://landinghub.visualstudio.com/visual-cpp-build-tools) using the **Default Install** option.
+    * Option 1: Install all the required tools and configurations using Microsoft's [windows-build-tools](https://github.com/felixrieseberg/windows-build-tools) using `npm install --global --production windows-build-tools` from an elevated PowerShell or CMD.exe (run as Administrator).
+    * Option 2: Install tools and configuration manually:
+      * Visual C++ Build Environment:
+        * Option 1: Install [Visual C++ Build Tools](http://landinghub.visualstudio.com/visual-cpp-build-tools) using the **Default Install** option.
 
-      * Option 2: Install [Visual Studio 2015](https://www.visualstudio.com/products/visual-studio-community-vs) (or modify an existing installation) and select *Common Tools for Visual C++* during setup. This also works with the free Community and Express for Desktop editions.
+        * Option 2: Install [Visual Studio 2015](https://www.visualstudio.com/products/visual-studio-community-vs) (or modify an existing installation) and select *Common Tools for Visual C++* during setup. This also works with the free Community and Express for Desktop editions.
 
-      > :bulb: [Windows Vista / 7 only] requires [.NET Framework 4.5.1](http://www.microsoft.com/en-us/download/details.aspx?id=40773)
+        > :bulb: [Windows Vista / 7 only] requires [.NET Framework 4.5.1](http://www.microsoft.com/en-us/download/details.aspx?id=40773)
 
-    * Install [Python 2.7](https://www.python.org/downloads/) (`v3.x.x` is not supported), and run `npm config set python python2.7` (or see below for further instructions on specifying the proper Python version and path.)
-    * Launch cmd, `npm config set msvs_version 2015`
+      * Install [Python 2.7](https://www.python.org/downloads/) (`v3.x.x` is not supported), and run `npm config set python python2.7` (or see below for further instructions on specifying the proper Python version and path.)
+      * Launch cmd, `npm config set msvs_version 2015`
 
     If the above steps didn't work for you, please visit [Microsoft's Node.js Guidelines for Windows](https://github.com/Microsoft/nodejs-guidelines/blob/master/windows-environment.md#compiling-native-addon-modules) for additional tips.
 
@@ -83,6 +85,12 @@ platform. Use `configure` for that:
 
 ``` bash
 $ nw-gyp configure --target=<0.3.2 or other nw version>
+```
+
+Auto-detection fails for Visual C++ Build Tools 2015, so `--msvs_version=2015`
+needs to be added (not needed when run by npm as configured above):
+``` bash
+$ nw-gyp configure --msvs_version=2015
 ```
 
 __Note__: The `configure` step looks for the `binding.gyp` file in the current
@@ -171,6 +179,7 @@ Command Options
 | `--thin=yes`                      | Enable thin static libraries
 | `--arch=$arch`                    | Set target architecture (e.g. ia32)
 | `--tarball=$path`                 | Get headers from a local tarball
+| `--devdir=$path`                  | SDK download directory (default=~/.nw-gyp)
 | `--ensure`                        | Don't reinstall headers if already present
 | `--dist-url=$url`                 | Download header tarball from custom URL
 | `--proxy=$url`                    | Set HTTP proxy for downloading header tarball
@@ -179,6 +188,23 @@ Command Options
 | `--python=$path`                  | Set path to the python (2) binary
 | `--msvs_version=$version`         | Set Visual Studio version (win)
 | `--solution=$solution`            | Set Visual Studio Solution version (win)
+
+
+Configuration
+--------
+
+__`nw-gyp` responds to environment variables or `npm` configuration__
+1. Environment variables take the form `npm_config_OPTION_NAME` for any of the 
+ options listed above (dashes in option names should be replaced by underscores).
+ These work also when `nw-gyp` is invoked directly:  
+ `$ export npm_config_devdir=/tmp/.gyp`  
+ or on Windows  
+ `> set npm_config_devdir=c:\temp\.gyp`  
+2. As `npm` configuration, variables take the form `OPTION_NAME`.
+ This way only works when `nw-gyp` is executed by `npm`:  
+ `$ npm config set [--global] devdir /tmp/.gyp`  
+ `$ npm i buffertools`
+ 
 
 
 License
