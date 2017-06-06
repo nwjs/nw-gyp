@@ -11,7 +11,7 @@
     "bindings",
     "gyp"
   ],
-  "version": "3.4.0",
+  "version": "3.6.2",
   "installVersion": 9,
   "author": "Roger Wang <wenrui@gmail.com> (based on node-gyp)",
   "repository": { "type": "git", "url": "https://github.com/nwjs/nw-gyp.git" },
@@ -25,12 +25,11 @@
     "minimatch": "^3.0.2",
     "mkdirp": "^0.5.0",
     "nopt": "2 || 3",
-    "npmlog": "0 || 1 || 2 || 3",
+    "npmlog": "0 || 1 || 2 || 3 || 4",
     "osenv": "0",
-    "path-array": "^1.0.0",
     "request": "2",
     "rimraf": "2",
-    "semver": "2.x || 3.x || 4 || 5",
+    "semver": "~5.3.0",
     "tar": "^2.0.0",
     "which": "1"
   },
