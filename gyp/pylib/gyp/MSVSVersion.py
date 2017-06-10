@@ -226,6 +226,15 @@ def _CreateVersion(name, path, sdk_based=False):
   if path:
     path = os.path.normpath(path)
   versions = {
+      '2015e': VisualStudioVersion('2015',
+                                  'Visual Studio 2015',
+                                  solution_version='12.00',
+                                  project_version='14.0',
+                                  flat_sln=False,
+                                  uses_vcxproj=True,
+                                  path=path,
+                                  sdk_based=sdk_based,
+                                  default_toolset='v140'),
       '2015': VisualStudioVersion('2015',
                                   'Visual Studio 2015',
                                   solution_version='12.00',
@@ -422,6 +431,7 @@ def SelectVisualStudioVersion(version='auto', allow_fallback=True):
     '2013': ('12.0',),
     '2013e': ('12.0',),
     '2015': ('14.0',),
+    '2015e': ('14.0',),
   }
   override_path = os.environ.get('GYP_MSVS_OVERRIDE_PATH')
   if override_path:

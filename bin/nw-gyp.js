@@ -4,7 +4,7 @@
  * Set the title.
  */
 
-process.title = 'node-gyp'
+process.title = 'nw-gyp'
 
 /**
  * Module dependencies.
@@ -28,12 +28,12 @@ var homeDir = osenv.home()
 if (prog.devDir) {
   prog.devDir = prog.devDir.replace(/^~/, homeDir)
 } else if (homeDir) {
-  prog.devDir = path.resolve(homeDir, '.node-gyp')
+  prog.devDir = path.resolve(homeDir, '.nw-gyp')
 } else {
   throw new Error(
-    "node-gyp requires that the user's home directory is specified " +
+    "nw-gyp requires that the user's home directory is specified " +
     "in either of the environmental variables HOME or USERPROFILE. " +
-    "Overide with: --devdir /path/to/.node-gyp")
+    "Overide with: --devdir /path/to/.nw-gyp")
 }
 
 if (prog.todo.length === 0) {
@@ -47,7 +47,7 @@ if (prog.todo.length === 0) {
 
 log.info('it worked if it ends with', 'ok')
 log.verbose('cli', process.argv)
-log.info('using', 'node-gyp@%s', prog.version)
+log.info('using', 'nw-gyp@%s', prog.version)
 log.info('using', 'node@%s | %s | %s', process.versions.node, process.platform, process.arch)
 
 
@@ -99,7 +99,7 @@ function run () {
           console.log(version)
         })
       } else {
-        console.log('No node development files installed. Use `node-gyp install` to install a version.')
+        console.log('No node development files installed. Use `nw-gyp install` to install a version.')
       }
     } else if (arguments.length >= 2) {
       console.log.apply(console, [].slice.call(arguments, 1))
@@ -133,14 +133,14 @@ function errorMessage () {
             .map(JSON.stringify).join(' '))
   log.error('cwd', process.cwd())
   log.error('node -v', process.version)
-  log.error('node-gyp -v', 'v' + prog.package.version)
+  log.error('nw-gyp -v', 'v' + prog.package.version)
 }
 
 function issueMessage () {
   errorMessage()
-  log.error('', [ 'This is a bug in `node-gyp`.'
-                , 'Try to update node-gyp and file an Issue if it does not help:'
-                , '    <https://github.com/nodejs/node-gyp/issues>'
+  log.error('', [ 'This is a bug in `nw-gyp`.'
+                , 'Try to update nw-gyp and file an Issue if it does not help:'
+                , '    <https://github.com/nwjs/nw-gyp/issues>'
                 ].join('\n'))
 }
 

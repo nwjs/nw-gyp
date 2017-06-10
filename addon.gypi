@@ -109,6 +109,7 @@
           '-luuid.lib',
           '-lodbc32.lib',
           '-lDelayImp.lib',
+          '-l"<(nw_lib_file)"',
           '-l"<(node_lib_file)"'
         ],
         'msvs_disabled_warnings': [
@@ -122,6 +123,11 @@
         'defines': [
           '_LARGEFILE_SOURCE',
           '_FILE_OFFSET_BITS=64'
+        ],
+      }],
+      [ 'OS=="win" and v13!=1', {
+        'libraries!': [
+          '-l"<(node_root_dir)/$(ConfigurationName)/node.lib"'
         ],
       }],
       [ 'OS in "freebsd openbsd netbsd solaris" or \

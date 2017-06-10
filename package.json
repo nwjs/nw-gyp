@@ -1,6 +1,6 @@
 {
-  "name": "node-gyp",
-  "description": "Node.js native addon build tool",
+  "name": "nw-gyp",
+  "description": "NW.js (node-webkit) native addon build tool",
   "license": "MIT",
   "keywords": [
     "native",
@@ -13,14 +13,11 @@
   ],
   "version": "3.6.3",
   "installVersion": 9,
-  "author": "Nathan Rajlich <nathan@tootallnate.net> (http://tootallnate.net)",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/nodejs/node-gyp.git"
-  },
+  "author": "Roger Wang <wenrui@gmail.com> (based on node-gyp)",
+  "repository": { "type": "git", "url": "https://github.com/nwjs/nw-gyp.git" },
   "preferGlobal": true,
-  "bin": "./bin/node-gyp.js",
-  "main": "./lib/node-gyp.js",
+  "bin": "./bin/nw-gyp.js",
+  "main": "./lib/nw-gyp.js",
   "dependencies": {
     "fstream": "^1.0.0",
     "glob": "^7.0.3",
