@@ -9,6 +9,7 @@ command line arguments.
 It supports NW.js starts from v0.3.2 and **users need to manually specify the
 version of NW.js currently**.
 
+**Please see [NW.js document](http://docs.nwjs.io/en/latest/For%20Users/Advanced/Use%20Native%20Node%20Modules/#for-non-lts-releases) for usage**
 
 #### Features:
 
