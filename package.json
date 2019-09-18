@@ -11,7 +11,7 @@
     "bindings",
     "gyp"
   ],
-  "version": "3.6.3",
+  "version": "3.6.4",
   "installVersion": 9,
   "author": "Roger Wang <wenrui@gmail.com> (based on node-gyp)",
   "repository": { "type": "git", "url": "https://github.com/nwjs/nw-gyp.git" },
