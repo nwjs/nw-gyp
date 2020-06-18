@@ -81,6 +81,9 @@ To compile your native addon, first go to its root directory:
 $ cd my_node_addon
 ```
 
+> TIP: Most likely you will run something like `cd node_modules/some-dependency` if
+> you're trying to get a dependency working in NW.js.
+
 The next step is to generate the appropriate project build files for the current
 platform. Use `configure` for that:
 
