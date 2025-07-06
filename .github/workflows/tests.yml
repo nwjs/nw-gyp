@@ -1,0 +1,177 @@
+# https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+# TODO: add `python -m pytest --doctest-modules`
+
+name: Tests
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_call:
+
+permissions:
+  contents: read # to fetch code (actions/checkout)
+
+jobs:
+  lint-python:
+    name: Lint Python
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: astral-sh/ruff-action@v3
+      with:
+        args: "check --select=E,F,PLC,PLE,UP,W,YTT --ignore=E721,PLC0206,PLC1901,S101,UP031 --target-version=py39"
+
+  lint-js:
+    name: Lint JS
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    - name: Use Node.js 22.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+    - name: Install Dependencies
+      run: npm install
+    - name: Lint
+      run: npm run lint
+
+  check-engines:
+    name: Check Engines
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    - name: Use Node.js 22.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+    - name: Install Dependencies
+      run: npm install
+    - name: Check Engines
+      run: |
+        # TODO: move this to its own action
+        npm install @npmcli/arborist@7 semver@7 --no-save
+        node .github/scripts/check-engines.js
+
+  test-pack:
+    name: Test Pack
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+    - name: Use Node.js 22.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22.x
+    - name: Update npm
+      run: npm install npm@latest -g
+    - name: Install Dependencies
+      run: npm install
+    - name: Pack
+      id: pack
+      env:
+        NODE_GYP_TEMP_DIR: '${{ runner.temp }}/node-gyp'
+      run: |
+        mkdir -p $NODE_GYP_TEMP_DIR
+        npm pack
+        tar xzf *.tgz -C $NODE_GYP_TEMP_DIR --strip-components=1
+        cp -r test/ $NODE_GYP_TEMP_DIR/test/
+        echo "dir=$NODE_GYP_TEMP_DIR" >> "$GITHUB_OUTPUT"
+    - name: Test
+      working-directory: ${{ steps.pack.outputs.dir }}
+      env:
+        FULL_TEST: '1'
+      run: |
+        npm install
+        npm test
+
+  tests:
+    strategy:
+      fail-fast: false
+      max-parallel: 11
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python: ["3.9", "3.11", "3.13"]
+        node: [18.x, 20.x, 22.x, 23.x]
+        include:
+          - os: macos-13
+            python: "3.13"
+            node: 23.x
+          - os: ubuntu-24.04-arm
+            python: "3.13"
+            node: 23.x
+          - os: windows-2025
+            python: "3.13"
+            node: 23.x
+    name: ${{ matrix.os }} - ${{ matrix.python }} - ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    env:
+      WASI_VERSION: '25'
+      WASI_VERSION_FULL: '25.0'
+      WASI_SDK_PATH: 'wasi-sdk-25.0'
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Use Python ${{ matrix.python }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+        env:
+          PYTHON_VERSION: ${{ matrix.python }}  # Why do this?
+      - uses: seanmiddleditch/gha-setup-ninja@v6
+      - name: Install wasi-sdk (Windows)
+        shell: pwsh
+        if: runner.os == 'Windows'
+        run: |
+          $MaxRetries = 3
+          $RetryDelay = 10
+          $Attempt = 0
+          while ($Attempt -lt $MaxRetries) {
+            try {
+              Start-BitsTransfer -Source https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-${env:WASI_VERSION}/wasi-sdk-${env:WASI_VERSION_FULL}-x86_64-windows.tar.gz
+              break
+            }
+            catch {
+              Write-Host "Error: $($_.Exception.Message)"
+              $Attempt++
+              if ($Attempt -lt $MaxRetries) {
+                Write-Host "Retrying in $RetryDelay seconds"
+                Start-Sleep -Seconds $RetryDelay
+              }
+              else {
+                Write-Host "Max retries reached. Download failed."
+                exit 1
+              }
+            }
+          }
+          New-Item -ItemType Directory -Path ${env:WASI_SDK_PATH}
+          tar -zxvf wasi-sdk-${env:WASI_VERSION_FULL}-x86_64-windows.tar.gz -C ${env:WASI_SDK_PATH} --strip 1
+      - name: Install Dependencies
+        run: |
+          npm install
+          pip install pytest
+      - name: Set Windows Env
+        if: runner.os == 'Windows'
+        run: |
+          echo 'GYP_MSVS_VERSION=2015' >> $Env:GITHUB_ENV
+          echo 'GYP_MSVS_OVERRIDE_PATH=C:\\Dummy' >> $Env:GITHUB_ENV
+      - name: Run Python Tests
+        run: python -m pytest
+      - name: Run Tests (macOS or Linux)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: npm test --python="${pythonLocation}/python"
+        env:
+          FULL_TEST: ${{ (matrix.node == '22.x' && matrix.python == '3.13') && '1' || '0' }}
+      - name: Run Tests (Windows)
+        if: runner.os == 'Windows'
+        shell: bash # Building wasm on Windows requires using make generator, it only works in bash
+        run: npm run test --python="${pythonLocation}\\python.exe"
+        env:
+          FULL_TEST: ${{ (matrix.node == '22.x' && matrix.python == '3.13') && '1' || '0' }}

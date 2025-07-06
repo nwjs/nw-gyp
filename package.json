@@ -1,6 +1,7 @@
 {
   "name": "nw-gyp",
   "description": "node-webkit native addon build tool",
+  "license": "MIT",
   "keywords": [
     "native",
     "addon",
@@ -10,29 +11,39 @@
     "bindings",
     "gyp"
   ],
-  "version": "0.13.0",
-  "installVersion": 9,
+  "version": "11.2.0",
+  "installVersion": 11,
   "author": "Roger Wang <wenrui@gmail.com> (based on node-gyp)",
-  "repository": { "type": "git", "url": "https://github.com/rogerwang/nw-gyp.git" },
+  "url": "git://github.com/rogerwang/nw-gyp.git",
   "preferGlobal": true,
   "bin": "./bin/nw-gyp.js",
   "main": "./lib/nw-gyp.js",
   "dependencies": {
-    "glob": "3",
-    "graceful-fs": "2",
-    "fstream": "0",
-    "minimatch": "0",
-    "mkdirp": "0",
-    "nopt": "2",
-    "npmlog": "0",
-    "osenv": "0",
-    "request": "2",
-    "rimraf": "2",
-    "semver": "~2.2.1",
-    "tar": "0",
-    "which": "1"
+    "env-paths": "^2.2.0",
+    "exponential-backoff": "^3.1.1",
+    "graceful-fs": "^4.2.6",
+    "make-fetch-happen": "^14.0.3",
+    "nopt": "^8.0.0",
+    "proc-log": "^5.0.0",
+    "semver": "^7.3.5",
+    "tar": "^7.4.3",
+    "tinyglobby": "^0.2.12",
+    "which": "^5.0.0"
   },
   "engines": {
-    "node": ">= 0.8.0"
+    "node": "^18.17.0 || >=20.5.0"
+  },
+  "devDependencies": {
+    "bindings": "^1.5.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.16.0",
+    "mocha": "^11.0.1",
+    "nan": "^2.14.2",
+    "neostandard": "^0.11.9",
+    "require-inject": "^1.4.4"
+  },
+  "scripts": {
+    "lint": "eslint \"*/*.js\" \"test/**/*.js\" \".github/**/*.js\"",
+    "test": "cross-env NODE_GYP_NULL_LOGGER=true mocha --timeout 15000 test/test-download.js test/test-*"
   }
 }
